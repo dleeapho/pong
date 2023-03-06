@@ -6,14 +6,12 @@ receiver = 1
 court = [0, 1, 2, 3, 4]
 baseline = 3
 
-# Game state global vars
-is_inplay = False
-is_returned = False
-rally_speed = 0
-
 def serve(from_x, from_y):
     # Serves a ball by putting is_inplay True and establishes the initial speed of the game
+    global is_returned
+    global is_inplay
     is_inplay = True
+    is_returned = False
     serving_speed = 10000
 
     for setserve in range(0,3):
@@ -26,10 +24,12 @@ def serve(from_x, from_y):
 
 def evaluate_turn(position, current_speed, return_speed):
     # Evaluates whether the rally is still in play and if so the new pace of the game
-    is_inplay = True
     speedup_factor = 3  # Smaller here means returns speed up more quickly
+    global is_returned
+    global is_inplay
     if is_returned:
         if position == baseline:
+            is_inplay = True
             current_speed = current_speed - (return_speed // speedup_factor)
         else:
             is_inplay = False
@@ -38,24 +38,29 @@ def evaluate_turn(position, current_speed, return_speed):
             if position > baseline:
                 basic.show_string("Miss")
     else:
-        basic.show_string("Ace")
         is_inplay = False
+        basic.show_string("Ace")
     return current_speed
 
 def wait_for_hit(receivingplayer, speed):
     # Waits and indicates if the play has pressed a button and how long the receiving player waited
+    global is_returned
     is_returned = False
     for tick in range(0, speed):
         if input.button_is_pressed(receivingplayer):
-            returned = True
+            is_returned = True
             break
     return tick
 
+# Game state global vars
+is_inplay = False
+is_returned = False
+rally_speed = 0
 
 while True:
+
     # The rally loop
     bally = randint(0,4)
-    returned = False
 
     for ballx in court:
         # The ball moving loop
@@ -63,7 +68,8 @@ while True:
         ballbright = position + 5
         if not is_inplay:
             rally_speed = serve(ballx, bally)
-            led.plot_brightness(ballx, bally, ballbright)
+        led.plot_brightness(ballx, bally, ballbright)
+        pause(1000)
         return_force = wait_for_hit(player[receiver], rally_speed)
         led.plot_brightness(ballx, bally, 0)
         if is_returned:
