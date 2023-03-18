@@ -34,12 +34,18 @@ def evaluate_turn(position, current_speed, return_speed):
         else:
             is_inplay = False
             if position < baseline:
+                music.play_sound_effect(music.builtin_sound_effect(soundExpression.sad),
+                    SoundExpressionPlayMode.UNTIL_DONE)
                 basic.show_string("Fault")
             if position > baseline:
+                music.play_sound_effect(music.builtin_sound_effect(soundExpression.yawn),
+                    SoundExpressionPlayMode.UNTIL_DONE)
                 basic.show_string("Miss")
     else:
         is_inplay = False
         basic.show_string("Ace")
+        music.play_sound_effect(music.builtin_sound_effect(soundExpression.soaring),
+                            SoundExpressionPlayMode.UNTIL_DONE)
     return current_speed
 
 def wait_for_hit(receivingplayer, speed):
@@ -49,6 +55,8 @@ def wait_for_hit(receivingplayer, speed):
     for tick in range(0, speed):
         if input.button_is_pressed(receivingplayer):
             is_returned = True
+            music.play_tone(Note.C, music.beat(BeatFraction.HALF))
+#           music.play_sound_effect(music.builtin_sound_effect(soundExpression.spring), SoundExpressionPlayMode.UNTIL_DONE)
             break
     return tick
 

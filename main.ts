@@ -37,10 +37,12 @@ function evaluate_turn(position: number, current_speed: number, return_speed: nu
         } else {
             is_inplay = false
             if (position < baseline) {
+                music.playSoundEffect(music.builtinSoundEffect(soundExpression.sad), SoundExpressionPlayMode.UntilDone)
                 basic.showString("Fault")
             }
             
             if (position > baseline) {
+                music.playSoundEffect(music.builtinSoundEffect(soundExpression.yawn), SoundExpressionPlayMode.UntilDone)
                 basic.showString("Miss")
             }
             
@@ -49,6 +51,7 @@ function evaluate_turn(position: number, current_speed: number, return_speed: nu
     } else {
         is_inplay = false
         basic.showString("Ace")
+        music.playSoundEffect(music.builtinSoundEffect(soundExpression.soaring), SoundExpressionPlayMode.UntilDone)
     }
     
     return current_speed
@@ -62,6 +65,8 @@ function wait_for_hit(receivingplayer: number, speed: number): number {
     for (tick = 0; tick < speed; tick++) {
         if (input.buttonIsPressed(receivingplayer)) {
             is_returned = true
+            music.playTone(Note.C, music.beat(BeatFraction.Half))
+            //            music.play_sound_effect(music.builtin_sound_effect(soundExpression.spring), SoundExpressionPlayMode.UNTIL_DONE)
             break
         }
         
