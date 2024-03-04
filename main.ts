@@ -1,91 +1,104 @@
 let bally: number;
-let returned: boolean;
 let position: number;
 let ballbright: number;
+let return_force: number;
 //  Simple pong
 let player = [Button.A, Button.B]
 let server = 0
 let receiver = 1
 let court = [0, 1, 2, 3, 4]
 let baseline = 3
-function serve(from_x: number, from_y: number): boolean[] {
-    /** serves a ball and returns True to indicate the game is now in play and resets the speed of the game */
+function serve(from_x: number, from_y: number): number {
+    //  Serves a ball by putting is_inplay True and establishes the initial speed of the game
+    
+    
+    is_inplay = true
+    is_returned = false
     let serving_speed = 10000
-    let is_inplay = true
     for (let setserve = 0; setserve < 3; setserve++) {
         pause(150)
         led.plotBrightness(from_x, from_y, 9)
         pause(150)
         led.plotBrightness(from_x, from_y, ballbright)
     }
-    return [is_inplay, serving_speed]
+    return serving_speed
 }
 
-function evaluate_turn(is_returned: boolean, position: number, current_speed: number, return_speed: number): boolean[] {
-    /** evaluates whether the rally is still in play and if so the new pace of the game */
-    let is_inplay = true
+function evaluate_turn(position: number, current_speed: number, return_speed: number): number {
+    //  Evaluates whether the rally is still in play and if so the new pace of the game
     let speedup_factor = 3
-    //  smaller means returns speed up more quickly
+    //  Smaller here means returns speed up more quickly
+    
+    
     if (is_returned) {
         if (position == baseline) {
+            is_inplay = true
             current_speed = current_speed - Math.idiv(return_speed, speedup_factor)
         } else {
             is_inplay = false
             if (position < baseline) {
+                music.playSoundEffect(music.builtinSoundEffect(soundExpression.sad), SoundExpressionPlayMode.UntilDone)
                 basic.showString("Fault")
             }
             
             if (position > baseline) {
+                music.playSoundEffect(music.builtinSoundEffect(soundExpression.yawn), SoundExpressionPlayMode.UntilDone)
                 basic.showString("Miss")
             }
             
         }
         
     } else {
-        basic.showString("Ace")
         is_inplay = false
+        basic.showString("Ace")
+        music.playSoundEffect(music.builtinSoundEffect(soundExpression.soaring), SoundExpressionPlayMode.UntilDone)
     }
     
-    return [is_inplay, current_speed]
+    return current_speed
 }
 
-function wait_for_hit(receivingplayer: number, speed: number): boolean[] {
+function wait_for_hit(receivingplayer: number, speed: number): number {
     let tick: number;
-    /** waits and indicates if the play has pressed a button and how long he/she waited */
-    let returned = false
+    //  Waits and indicates if the play has pressed a button and how long the receiving player waited
+    
+    is_returned = false
     for (tick = 0; tick < speed; tick++) {
         if (input.buttonIsPressed(receivingplayer)) {
-            returned = true
+            is_returned = true
+            music.playTone(Note.C, music.beat(BeatFraction.Half))
+            //            music.play_sound_effect(music.builtin_sound_effect(soundExpression.spring), SoundExpressionPlayMode.UNTIL_DONE)
             break
         }
         
     }
-    return [returned, tick]
+    return tick
 }
 
+//  Game state global vars
 let is_inplay = false
+let is_returned = false
 let rally_speed = 0
 while (true) {
-    //  the rally loop
+    //  The rally loop
     bally = randint(0, 4)
-    returned = false
     for (let ballx of court) {
-        //  the ball moving loop
+        //  The ball moving loop
         position = _py.py_array_index(court, ballx)
         ballbright = position + 5
         if (!is_inplay) {
-            let [is_inplay, rally_speed] = serve(ballx, bally)
-            led.plotBrightness(ballx, bally, ballbright)
+            rally_speed = serve(ballx, bally)
         }
         
-        let [returned, return_force] = wait_for_hit(player[receiver], rally_speed)
+        led.plotBrightness(ballx, bally, ballbright)
+        pause(1000)
+        return_force = wait_for_hit(player[receiver], rally_speed)
         led.plotBrightness(ballx, bally, 0)
-        if (returned) {
+        if (is_returned) {
             break
         }
         
     }
-    let [is_inplay, rally_speed] = evaluate_turn(returned, position, rally_speed, return_force)
+    rally_speed = evaluate_turn(position, rally_speed, return_force)
     // clear the button buffer
     input.buttonIsPressed(Button.A)
     input.buttonIsPressed(Button.B)
